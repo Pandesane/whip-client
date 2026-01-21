@@ -7,8 +7,8 @@
 	// import FlvJs from 'flv.js';
 	// import WhipChannel from '$lib/sockets/whip_channel';
 	let url = 'http://localhost:1985/rtc/v1/whip/?app=live&stream=livestream&eip=192.168.3.10';
-	let flvUrl = 'http://localhost:8080/live/livestream.flv?eip=192.168.3.10';
-	let whepUrl = 'http://localhost:1985/rtc/v1/whep/?app=live&stream=pande';
+	// let flvUrl = 'http://localhost:8080/live/livestream.flv?eip=192.168.3.10';
+	// let whepUrl = 'http://localhost:1985/rtc/v1/whep/?app=live&stream=pande';
 
 	let videoPlayer: HTMLVideoElement;
 
