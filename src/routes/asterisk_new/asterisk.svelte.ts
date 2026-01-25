@@ -1,36 +1,38 @@
 
-import { UA, WebSocketInterface, debug } from 'jssip';
-import type { RTCSession, RTCSessionEventMap } from 'jssip/lib/RTCSession';
+import { UA, WebSocketInterface, debug } from '$lib/jssip/jssip';
+import type { RTCSession, RTCSessionEventMap } from '$lib/jssip/jssip';
 import type {
   IncomingRTCSessionEvent,
   OutgoingRTCSessionEvent,
   UAConfiguration
-} from 'jssip/lib/UA';
+} from '$lib/jssip/jssip';
 
 
-debug.enable("JsSIP")
 
 export default class AsteriskCallState {
-  contactToCall: string = $state('100');
+  contactToCall: string = $state('999');
   isRegistering: boolean = $state(true);
   incomingCall: boolean = $state(false);
+  isStillInCall: boolean = $state(false)
   callButtonText: string = $derived.by(() => {
     if (this.incomingCall) {
       return 'Answer';
     }
     return 'Call';
   });
-  rtcSession: RTCSession | undefined = $state();
-  authID = $state('WS_PHONE_B');
+  rtcSession: RTCSession | undefined;
+  authID = $state('WS_PHONE_A');
   authPassword = $state('pande');
+  ua: UA | undefined;
+
   hostIpOrName = 'localhost';
   register = true;
-  ua: UA | undefined = $state();
   audioElement?: HTMLAudioElement;
   constructor() {
+    $inspect(this.ua, this.authID, this.authPassword, this.rtcSession, this.contactToCall, this.isRegistering, this.incomingCall, this.isStillInCall)
   }
 
-  setAudioElement(audioElement: HTMLAudioElement){
+  setAudioElement(audioElement: HTMLAudioElement) {
     this.audioElement = audioElement
   }
 
@@ -61,7 +63,7 @@ export default class AsteriskCallState {
 
     this.ua.on('connected', (event) => {
       console.log(event.socket.url);
-      event.socket.ondata = (event) => {
+      event.socket.ondata = (event: any) => {
         // console.log(event);
       };
     });
@@ -101,7 +103,6 @@ export default class AsteriskCallState {
     });
 
     this.ua.start();
-    // ua = ua
   }
   handleIncomingCall(rtcSession: RTCSession) {
     rtcSession.answer();
@@ -161,6 +162,9 @@ export default class AsteriskCallState {
     if (this.incomingCall) {
       this.handleIncomingCall(this.rtcSession!);
     } else {
+      // if (!this.isStillInCall) {
+      //   this.isStillInCall = true
+      // }
       this.makeCall();
     }
     this.incomingCall = false;

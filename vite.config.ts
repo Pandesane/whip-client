@@ -9,6 +9,12 @@ export default defineConfig({
   optimizeDeps: {
     include: ['jssip'],
   },
+   build: {
+    commonjsOptions: {
+      include: ["jssip"],
+    },
+
+  },
 
   server: {
     // allowedHosts: ["occidentally-scapose-jimmie.ngrok-free.dev"],

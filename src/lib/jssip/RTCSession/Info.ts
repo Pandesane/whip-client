@@ -1,0 +1,116 @@
+
+
+import { EventEmitter } from "events"
+import * as JsSIP_C from "../Constants"
+import * as Exceptions from "../Exceptions"
+import * as Utils from "../Utils"
+
+
+
+
+
+
+
+
+// const EventEmitter = require('events').EventEmitter;
+// const JsSIP_C = require('../Constants');
+// const Exceptions = require('../Exceptions');
+// const Utils = require('../Utils');
+
+export class Info extends EventEmitter {
+
+  _session: any;
+  _direction: any;
+  _contentType: any;
+  _body: any;
+  request: any
+  constructor(session: any) {
+    super();
+
+    this._session = session;
+    this._direction = null;
+    this._contentType = null;
+    this._body = null;
+  }
+
+  get contentType() {
+    return this._contentType;
+  }
+
+  get body() {
+    return this._body;
+  }
+
+  send(contentType: any, body: any, options: any = {}) {
+    this._direction = 'outgoing';
+
+    if (contentType === undefined) {
+      throw new TypeError('Not enough arguments');
+    }
+
+    // Check RTCSession Status.
+    if (this._session.status !== this._session.C.STATUS_CONFIRMED &&
+      this._session.status !== this._session.C.STATUS_WAITING_FOR_ACK) {
+      throw new Exceptions.InvalidStateError(this._session.status);
+    }
+
+    this._contentType = contentType;
+    this._body = body;
+
+    const extraHeaders = Utils.cloneArray(options.extraHeaders);
+
+    extraHeaders.push(`Content-Type: ${contentType}`);
+
+    this._session.newInfo({
+      originator: 'local',
+      info: this,
+      request: this.request
+    });
+
+    this._session.sendRequest(JsSIP_C.INFO, {
+      extraHeaders,
+      eventHandlers: {
+        onSuccessResponse: (response: any) => {
+          this.emit('succeeded', {
+            originator: 'remote',
+            response
+          });
+        },
+        onErrorResponse: (response: any) => {
+          this.emit('failed', {
+            originator: 'remote',
+            response
+          });
+        },
+        onTransportError: () => {
+          this._session.onTransportError();
+        },
+        onRequestTimeout: () => {
+          this._session.onRequestTimeout();
+        },
+        onDialogError: () => {
+          this._session.onDialogError();
+        }
+      },
+      body
+    });
+  }
+
+  init_incoming(request: any) {
+    this._direction = 'incoming';
+    this.request = request;
+
+    request.reply(200);
+
+    this._contentType = request.hasHeader('Content-Type') ?
+      request.getHeader('Content-Type').toLowerCase() : undefined;
+    this._body = request.body;
+
+    this._session.newInfo({
+      originator: 'remote',
+      info: this,
+      request
+    });
+  }
+};
+
