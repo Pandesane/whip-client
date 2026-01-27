@@ -232,6 +232,7 @@ export class UA extends EventEmitter {
   // Initialize registrator.
   _registrator: Registrator;
   ACK_TO: string = ""
+  currentSession: RTCSession | null = null
 
   constructor(configuration: any) {
     // Check configuration argument.
@@ -279,6 +280,7 @@ export class UA extends EventEmitter {
     this._data = {};
 
     this._closeTimer = null;
+
 
     // Load configuration.
     try {
@@ -407,6 +409,7 @@ export class UA extends EventEmitter {
     const session = new RTCSession(this);
 
     session.connect(target, options);
+    this.currentSession = session
 
     return session;
   }
@@ -746,7 +749,7 @@ export class UA extends EventEmitter {
       /* eslint-disable no-new */
       new Transactions.InviteServerTransaction(this, this._transport, request);
       /* eslint-enable no-new */
-    } else if (method !== JsSIP_C.ACK && method !== JsSIP_C.CANCEL) {
+    } else if (method !== JsSIP_C.ACK && method !== JsSIP_C.CANCEL ) {
       /* eslint-disable no-new */
       new Transactions.NonInviteServerTransaction(
         this,
@@ -827,7 +830,11 @@ export class UA extends EventEmitter {
           break;
         case JsSIP_C.BYE:
           // Out of dialog BYE received.
-          request.reply(481);
+          if (this.currentSession) {
+            this.currentSession.receiveRequest(request)
+            this.currentSession = null
+          }
+          // request.reply(481);
           break;
         case JsSIP_C.CANCEL:
           session = this._findSession(request);
@@ -1215,15 +1222,17 @@ function onTransportData(data: any, ua: any) {
     return;
   }
 
+  // TODO: Add sanity check back to be able to detect loops and invalid messages
   // Do some sanity check.
-  if (!sanityCheck(message, ua, transport)) {
-    console.log("Failed sanity check")
-    // return;
-  }
+  // if (!sanityCheck(message, ua, transport)) {
+  //   console.log("Failed sanity check")
+  //  return;
+  // }
 
   if (message instanceof SIPMessage.IncomingRequest) {
     message.transport = transport;
     ua.receiveRequest(message);
+    // this._status === C.STATUS_INVITE_RECEIVED
   } else if (message instanceof SIPMessage.IncomingResponse) {
     /* Unike stated in 18.1.2, if a response does not match
      * any transaction, it is discarded here and no passed to the core

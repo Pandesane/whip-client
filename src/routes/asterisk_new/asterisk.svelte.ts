@@ -126,13 +126,14 @@ export default class AsteriskCallState {
       progress: (e: any) => {
         console.log('call is in progress');
       },
-      failed: function (e) {
-        console.log('call failed with cause: ');
+      failed: (e) => {
+        console.log('call failed with cause: ', e);
       },
-      ended: function (e) {
-        console.log('call ended with cause: ');
+      ended: (e) => {
+        console.log('call ended with cause: ', e);
+        // this.rtcSession?.terminate()
       },
-      confirmed: function (e: any) {
+      confirmed: (e: any) => {
         console.log('call confirmed');
       }
     };

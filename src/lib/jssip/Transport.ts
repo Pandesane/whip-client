@@ -156,9 +156,9 @@ export class Transport {
       this.socket.onconnect = this._onConnect.bind(this);
       this.socket.ondisconnect = this._onDisconnect.bind(this);
       this.socket.ondata = this._onData.bind(this);
-      this.socket.onCustomData = (data: any) => {
-        console.log("Calling custom Data receiver", data);
-      };
+      // this.socket.onCustomData = (data: any) => {
+      //   console.log("Calling custom Data receiver", data);
+      // };
 
       this.socket.connect();
     }
@@ -330,7 +330,7 @@ export class Transport {
   }
 
   _onData(data: any) {
-    console.log("Running _onData");
+    console.log("Running _onData", data);
     // this.ondata({ transport: this, message: data });
 
     // CRLF Keep Alive request from server, reply.

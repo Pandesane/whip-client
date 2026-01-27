@@ -151,7 +151,7 @@ export class WebSocketInterface implements Socket {
   _onMessage({ data }: any) {
     logger.debug("received WebSocket message");
     // console.log("Custom Logger: ", data);
-    this.onCustomData(data)
+    // this.onCustomData(data)
 
     this.ondata(data);
   }

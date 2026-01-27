@@ -5,7 +5,7 @@
       "name": "Debug SvelteKit (Chrome)",
       "type": "pwa-chrome",
       "request": "launch",
-      "url": "https://localhost:5173",
+      "url": "http://localhost:5174/asterisk_new",
       "webRoot": "${workspaceFolder}",
       "sourceMaps": true,
       "sourceMapPathOverrides": {
