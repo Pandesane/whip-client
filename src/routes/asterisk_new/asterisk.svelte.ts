@@ -162,6 +162,7 @@ export default class AsteriskCallState {
   call() {
     if (this.incomingCall) {
       this.handleIncomingCall(this.rtcSession!);
+      this.ua!.currentSession = this.rtcSession!
     } else {
       // if (!this.isStillInCall) {
       //   this.isStillInCall = true

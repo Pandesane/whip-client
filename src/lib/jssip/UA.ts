@@ -849,6 +849,10 @@ export class UA extends EventEmitter {
            * ACK request without a corresponding Invite Transaction
            * and without To tag.
            */
+           if (this.currentSession) {
+            this.currentSession.receiveRequest(request)
+            // this.currentSession = null
+          }
           break;
         case JsSIP_C.NOTIFY:
           // Receive new sip event.
@@ -1251,6 +1255,7 @@ function onTransportData(data: any, ua: any) {
         break;
       case JsSIP_C.ACK:
         // Just in case ;-).
+        console.log("Received ACK request")
         break;
       default:
         transaction = ua._transactions.nict[message.via_branch];
