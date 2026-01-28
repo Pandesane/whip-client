@@ -62,4 +62,4 @@
 {/if}
 
 <!-- <video bind:this={videoElement} muted autoplay class=""></video> -->
-<audio bind:this={audioElement} muted autoplay class=""></audio>
+<audio bind:this={audioElement} muted volume={0} autoplay class=""></audio>

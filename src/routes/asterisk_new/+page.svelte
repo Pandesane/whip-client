@@ -45,7 +45,11 @@
 			>
 			<button
 				onclick={() => {
-					asteriskCallState.call();
+					if (asteriskCallState.isInCall) {
+						asteriskCallState.endCall();
+					} else {
+						asteriskCallState.call();
+					}
 				}}
 				class="btn rounded-md bg-orange-600 p-2 px-6 text-white"
 				>{asteriskCallState?.callButtonText}</button

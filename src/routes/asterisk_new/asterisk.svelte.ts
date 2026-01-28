@@ -13,8 +13,11 @@ export default class AsteriskCallState {
   contactToCall: string = $state('999');
   isRegistering: boolean = $state(true);
   incomingCall: boolean = $state(false);
-  isStillInCall: boolean = $state(false)
+  isInCall: boolean = $state(false)
   callButtonText: string = $derived.by(() => {
+    if (this.isInCall) {
+      return "Hangup"
+    }
     if (this.incomingCall) {
       return 'Answer';
     }
@@ -29,7 +32,7 @@ export default class AsteriskCallState {
   register = true;
   audioElement?: HTMLAudioElement;
   constructor() {
-    $inspect(this.ua, this.authID, this.authPassword, this.rtcSession, this.contactToCall, this.isRegistering, this.incomingCall, this.isStillInCall)
+    $inspect(this.ua, this.authID, this.authPassword, this.rtcSession, this.contactToCall, this.isRegistering, this.incomingCall, this.isInCall)
   }
 
   setAudioElement(audioElement: HTMLAudioElement) {
@@ -74,12 +77,11 @@ export default class AsteriskCallState {
 
     this.ua.on('newRTCSession', (data: IncomingRTCSessionEvent | OutgoingRTCSessionEvent) => {
       let rtc = data.session;
-      this.rtcSession = rtc;
-      this.incomingCall = true;
       switch (rtc.direction) {
         case 'incoming':
-          console.log('Incoming Call');
-          // handleIncomingCall(rtc);
+          this.rtcSession = rtc;
+          this.incomingCall = true;
+          console.log('Incoming Call..........');
           break;
 
         case 'outgoing':
@@ -105,7 +107,14 @@ export default class AsteriskCallState {
     this.ua.start();
   }
   handleIncomingCall(rtcSession: RTCSession) {
+    this.ua!.currentSession = rtcSession
     rtcSession.answer();
+    rtcSession.connection.ontrack = (event: any) => {
+      console.log('Adding Streams');
+      console.log('Stream: ', event.streams[0]);
+      this.audioElement!.srcObject = event.streams[0];
+      this.audioElement!.muted = false;
+    };
   }
 
   handleOutgoingCall(rtcSession: RTCSession) { }
@@ -132,9 +141,13 @@ export default class AsteriskCallState {
       ended: (e) => {
         console.log('call ended with cause: ', e);
         // this.rtcSession?.terminate()
+        this.isInCall = false
+
       },
       confirmed: (e: any) => {
         console.log('call confirmed');
+        this.isInCall = true
+
       }
     };
 
@@ -161,16 +174,31 @@ export default class AsteriskCallState {
 
   call() {
     if (this.incomingCall) {
-      this.handleIncomingCall(this.rtcSession!);
-      this.ua!.currentSession = this.rtcSession!
+      if (!this.isInCall) {
+        this.handleIncomingCall(this.rtcSession!);
+        this.ua!.currentSession = this.rtcSession!
+        this.isInCall = true
+      }
     } else {
-      // if (!this.isStillInCall) {
-      //   this.isStillInCall = true
-      // }
-      this.makeCall();
+      if (!this.isInCall) {
+        this.makeCall();
+        this.isInCall = true
+      }
     }
     this.incomingCall = false;
   }
+
+
+  endCall() {
+
+    if (this.isInCall) {
+      console.log("Ending Call")
+      this.rtcSession?.terminate()
+      this.isInCall = false
+    }
+
+  }
+
 
 
 
