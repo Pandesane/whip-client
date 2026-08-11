@@ -165,9 +165,9 @@ export default class AsteriskCallState {
         console.log('Stream: ', event.streams[0]);
         // videoElement!.srcObject = event.streams[0];
         // videoElement.muted = false;
+        // videoElement.play();
         this.audioElement!.srcObject = event.streams[0];
         this.audioElement!.muted = false;
-        // videoElement.play();
       };
     }
   }
@@ -185,12 +185,12 @@ export default class AsteriskCallState {
         this.isInCall = true
       }
     }
+    console.log("Updated isInCall", this.isInCall)
     this.incomingCall = false;
   }
 
 
   endCall() {
-
     if (this.isInCall) {
       console.log("Ending Call")
       this.rtcSession?.terminate()

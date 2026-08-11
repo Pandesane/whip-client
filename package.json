@@ -31,10 +31,13 @@
 		"vite": "^7.2.6"
 	},
 	"dependencies": {
+		"@livekit/krisp-noise-filter": "^0.4.4",
+		"@livekit/track-processors": "^0.7.2",
 		"@types/phoenix": "^1.6.7",
 		"@types/sdp-transform": "^2.15.0",
 		"flv.js": "^1.6.2",
-		"phoenix": "^1.8.3",
+		"livekit-client": "^2.21.0",
+		"phoenix": "^1.8.9",
 		"sdp-interop-sl": "^1.4.3",
 		"sdp-transform": "^3.0.0",
 		"whip-whep": "^1.2.0",

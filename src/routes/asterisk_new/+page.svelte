@@ -1,69 +1,113 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import AsteriskCallState from './asterisk.svelte';
+	import { AsteriskSingleton } from '$lib/asterisk/asterisk.svelte';
 
-	let asteriskCallState: AsteriskCallState = new AsteriskCallState();
+	// let asterisk: AsteriskCallState = new AsteriskCallState();
+	let asterisk = AsteriskSingleton.getAsteriskServer();
 	let audioElement: HTMLAudioElement;
+	let authID: string | undefined = $state('WS_PHONE_A');
+	let authPassword: string | undefined = $state('pande');
+	let contactToCall: string | undefined = $state();
 
 	onMount(() => {
-		asteriskCallState.setAudioElement(audioElement);
 		return () => {
-			asteriskCallState.ua?.stop();
+			asterisk.ua?.stop();
 		};
 	});
+
+	function loadRemoteAudio(mediaElement: HTMLMediaElement) {
+		if (asterisk.isInCall) {
+			mediaElement.srcObject = asterisk.combinedStream!;
+			asterisk.setRemoteMediaElement(mediaElement);
+		}
+		return () => {
+			mediaElement.srcObject = null;
+			asterisk.setRemoteMediaElement(undefined);
+		};
+	}
+
+	function loadRemoteVideo(mediaElement: HTMLMediaElement) {
+		if (asterisk.isVideoCall) {
+			mediaElement.srcObject = asterisk.combinedStream!;
+			asterisk.setRemoteMediaElement(mediaElement);
+		}
+		return () => {
+			mediaElement.srcObject = null;
+			asterisk.setRemoteMediaElement(undefined);
+		};
+	}
 </script>
 
 <div class="flex h-screen flex-col justify-center">
 	<div class="mt-4">
-		{#if asteriskCallState.isRegistering}
-			<div class="mx-4 flex w-[80%] flex-col justify-center">
+		{#if !asterisk.isRegistered}
+			<div class="mx-2 flex w-[80%] flex-col justify-center">
 				<p>Register a new Account</p>
 				<div class="my-4 flex flex-col">
 					<label for="authID">Name</label>
-					<input id="authID" type="text" bind:value={asteriskCallState.authID} class="w-full" />
+					<input id="authID" type="text" bind:value={authID} class="w-full" />
 				</div>
 
 				<div class="my-4 flex flex-col">
 					<label for="authPassword">Password</label>
-					<input type="text" bind:value={asteriskCallState.authPassword} id="authPassword" />
+					<input type="text" bind:value={authPassword} id="authPassword" />
 				</div>
 			</div>
 		{:else}
 			<div class="flex w-full justify-center">
-				<input type="text" class="rounded-md px-4" bind:value={asteriskCallState.contactToCall} />
+				<input type="text" class="rounded-md px-4" bind:value={contactToCall} />
 			</div>
 		{/if}
 	</div>
 
 	<div class="mt-4 flex justify-center">
-		<div class="flex w-[50%] justify-between">
-			<button
-				onclick={() => {
-					asteriskCallState.registerAccount();
-				}}
-				class="btn rounded-md bg-blue-600 p-2 px-6 text-white">Register</button
-			>
-			<button
-				onclick={() => {
-					if (asteriskCallState.isInCall) {
-						asteriskCallState.endCall();
-					} else {
-						asteriskCallState.call();
-					}
-				}}
-				class="btn rounded-md bg-orange-600 p-2 px-6 text-white"
-				>{asteriskCallState?.callButtonText}</button
-			>
+		<div class="flex w-full justify-evenly">
+			{#if !asterisk.isRegistered}
+				<button
+					onclick={() => {
+						if (authID && authPassword) {
+							asterisk.registerToAsterisk(authID, authPassword);
+						}
+					}}
+					class="btn rounded-md bg-blue-600 p-2 px-6 text-white">Register</button
+				>
+			{:else}
+				<button
+					onclick={() => {
+						if (asterisk.isInCall) {
+							asterisk.endCall();
+						} else {
+							if (contactToCall) asterisk.call(contactToCall);
+						}
+					}}
+					class="btn rounded-md bg-orange-600 p-2 px-6 text-white">Audio Call</button
+				>
+
+				<button
+					onclick={() => {
+						if (asterisk.isInCall) {
+							asterisk.endCall();
+						} else {
+							if (contactToCall) asterisk.videoCall(contactToCall);
+						}
+					}}
+					class="btn rounded-md bg-orange-600 p-2 px-6 text-white">Video Call</button
+				>
+			{/if}
 		</div>
 	</div>
 </div>
 
-{#if asteriskCallState.incomingCall}
-	<!-- content here -->
-	<div class="h-50 w-50 bg-red-500">Pande</div>
-{:else}
-	<div class="h-50 w-50 bg-green-500">Pande</div>
-{/if}
 
 <!-- <video bind:this={videoElement} muted autoplay class=""></video> -->
-<audio bind:this={audioElement} muted autoplay class=""></audio>
+{#if asterisk.isInCall && asterisk.isVideoCall}
+	<a href="/asterisk_new/video" aria-label="Open video Progress Page">
+		<video
+			{@attach loadRemoteVideo}
+			autoplay
+			class="fixed right-2 bottom-40 z-100 h-40 w-40 bg-black"
+		></video>
+	</a>
+{:else if asterisk.isInCall && !asterisk.isVideoCall}
+	<audio {@attach loadRemoteAudio} autoplay></audio>
+{/if}
